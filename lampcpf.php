@@ -172,6 +172,7 @@ class wechatTest
 
         $this->logger("\r\n天气预报内容： ".count($info));
 
+        //形成图文数组
         $weatherArray = array();
         $weatherArray[] = array("Title"=>$info['city']."天气预报", "Description"=>"", "PicUrl"=>"", "Url" =>"");
         if ((int)$cityCode < 101340000){
@@ -182,7 +183,7 @@ class wechatTest
 /*
         //获取六日天气
         // $url = "http://m.weather.com.cn/mweather/".$cityCode.".shtml";
-        $url = "http://m.weather.com.cn/data/".$cityCode.".html";        
+        $url = "http://m.weather.com.cn/data/".$cityCode.".html";
             $this->logger("\r\n六日天气预报地址： ".$url);
         $output = $this->httpRequest($url);
             $this->logger("\r\n六日得到的output02:".$output);
@@ -191,6 +192,11 @@ class wechatTest
         $info = $weather['weatherinfo'];
             $this->logger("\r\n六日天气预报内容： ".count($info));
 
+        //标题
+        $weatherArray[] = array("Title"=>$info['city']."近三天的天气预报", "Description"=>"", "PicUrl"=>"", "Url" =>"");
+        
+
+        // 如果穿衣建议存在，就给用户
         if (!empty($info['index_d'])){
             $weatherArray[] = array("Title" =>$info['index_d'], "Description" =>"", "PicUrl" =>"", "Url" =>"");
         }
@@ -276,14 +282,14 @@ class wechatTest
         if(strstr($keyword,"文本"))       //查询文本两个字自不在关键字里面
         {
             $content = "这是一个文本消息";          
-            //$result = $this->transmitText($object,$content);
+            // $result = $this->transmitText($object,$content);
 
         }elseif (strstr($keyword,"单图文")) {
             $content=array();
             $content[]=array("Title"=>"这是一个标题","Description"=>"00","PicUrl"=>"http://139.129.128.130/a/image/1.jpg","Url"=>"http://baike.baidu.com/link?url=Es4-sw78N2IJT105s4LEmy7B8HYWUbtm4eTFEe58npAHX1QF89W_oSIaA9bYVLmfgHIxVshV4rnuz-tpVn2iBWCCGGt6US7wzmdyJKrKl0--oG18OPXVcKuyAe4dHFzJ");
 
             $this->logger("\r\n content的值：".var_dump($content));
-            $result = $this->transmitNews($object,$content);
+            // $result = $this->transmitNews($object,$content);
 
         }elseif (strstr($keyword,"图文") || strstr($keyword,"多图文")) {
             $content=array();
@@ -295,34 +301,35 @@ class wechatTest
             $content[]=array("Title"=>"这是一个标题5","Description"=>"55","PicUrl"=>"http://139.129.128.130/a/image/2.jpg","Url"=>"http://baike.baidu.com/link?url=Es4-sw78N2IJT105s4LEmy7B8HYWUbtm4eTFEe58npAHX1QF89W_oSIaA9bYVLmfgHIxVshV4rnuz-tpVn2iBWCCGGt6US7wzmdyJKrKl0--oG18OPXVcKuyAe4dHFzJ");
             
             //$this->logger("\r\n".var_dump($content));
-            $result = $this->transmitNews($object,$content);
+            // $result = $this->transmitNews($object,$content);
 
         }elseif (strstr($keyword,"音乐")) {
 
             $content   = array();
             $content[] = array("Title" =>"小苹果","Description"=>"很好听","MusicUrl"=>"http://139.129.128.130/a/music/1.mp3","HQMusicUrl"=>"http://139.129.128.130/a/music/1.mp3" );
-            $this->logger("\r\n我是音乐：".print_r($content));               
+            $this->logger("\r\n我是音乐：".$content);               
             
-            $result = $this->transmitMusic($object,$content);
+            // $result = $this->transmitMusic($object,$content);
 
             // $this->logger("\r\n"."音乐处理后的result："."\n".$result);
             
         }else{
             $content="常鹏飞 ".date("Y-m-d H:i:s")." 技术支持";
+            // $result = $this->transmitText($object,$content);
         }
 
-/*
+
         //判断单图文和多图文
         if(is_array($content)){
-            if (isset($conent['MusicUrl'])){
-                $result = $this->transmitMusic($object,$content);               
-            }elseif (isset($content[0])){
-                $result = $this->transmitNews($object,$content);
-            }
+            if (isset($content[0]['PicUrl'])){
+                $result = $this->transmitNews($object,$content);                            
+            }elseif (isset($content[0]['MusicUrl'])){
+                $result = $this->transmitMusic($object,$content);   
+            }            
         }else{
             $result = $this->transmitText($object,$content);
         }
-*/      
+      
         return $result;
         $this->logger("\r\n"."函数返回的值：\n".$result);
     }
@@ -332,6 +339,7 @@ class wechatTest
     //回复音乐消息————————————此处不能传值
     function transmitMusic($object,$musicArr)
     {
+        $this->logger("\r\n"."我在前面aaa"); 
         $item_str="";
         $itemTpl="
             <Music>
