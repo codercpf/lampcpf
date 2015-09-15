@@ -1,6 +1,7 @@
 <?php
 
 // require 'fci.php';
+// include 'dbinfo/ufun.inc.php';
 
 date_default_timezone_set('PRC');
 
@@ -286,7 +287,7 @@ class wechatTest
 
         }elseif (strstr($keyword,"单图文")) {
             $content=array();
-            $content[]=array("Title"=>"这是一个标题","Description"=>"00","PicUrl"=>"http://139.129.128.130/a/image/1.jpg","Url"=>"http://baike.baidu.com/link?url=Es4-sw78N2IJT105s4LEmy7B8HYWUbtm4eTFEe58npAHX1QF89W_oSIaA9bYVLmfgHIxVshV4rnuz-tpVn2iBWCCGGt6US7wzmdyJKrKl0--oG18OPXVcKuyAe4dHFzJ");
+            $content[]=array("Title"=>"这是一个标题","Description"=>"00","PicUrl"=>"http://139.129.128.130/a/image/1.jpg","Url"=>"http://baike.baidu.com/view/13123608.htm");
 
             $this->logger("\r\n content的值：".var_dump($content));
             // $result = $this->transmitNews($object,$content);
@@ -294,11 +295,11 @@ class wechatTest
         }elseif (strstr($keyword,"图文") || strstr($keyword,"多图文")) {
             $content=array();
             //几个图文消息就几个$content[];
-            $content[]=array("Title"=>"这是一个标题1","Description"=>"11","PicUrl"=>"http://139.129.128.130/a/image/1.jpg","Url"=>"http://baike.baidu.com/link?url=Es4-sw78N2IJT105s4LEmy7B8HYWUbtm4eTFEe58npAHX1QF89W_oSIaA9bYVLmfgHIxVshV4rnuz-tpVn2iBWCCGGt6US7wzmdyJKrKl0--oG18OPXVcKuyAe4dHFzJ");
-            $content[]=array("Title"=>"这是一个标题2","Description"=>"22","PicUrl"=>"http://139.129.128.130/a/image/2.jpg","Url"=>"http://baike.baidu.com/link?url=Es4-sw78N2IJT105s4LEmy7B8HYWUbtm4eTFEe58npAHX1QF89W_oSIaA9bYVLmfgHIxVshV4rnuz-tpVn2iBWCCGGt6US7wzmdyJKrKl0--oG18OPXVcKuyAe4dHFzJ");
-            $content[]=array("Title"=>"这是一个标题3","Description"=>"33","PicUrl"=>"http://139.129.128.130/a/image/2.jpg","Url"=>"http://baike.baidu.com/link?url=Es4-sw78N2IJT105s4LEmy7B8HYWUbtm4eTFEe58npAHX1QF89W_oSIaA9bYVLmfgHIxVshV4rnuz-tpVn2iBWCCGGt6US7wzmdyJKrKl0--oG18OPXVcKuyAe4dHFzJ");
-            $content[]=array("Title"=>"这是一个标题4","Description"=>"44","PicUrl"=>"http://139.129.128.130/a/image/2.jpg","Url"=>"http://baike.baidu.com/link?url=Es4-sw78N2IJT105s4LEmy7B8HYWUbtm4eTFEe58npAHX1QF89W_oSIaA9bYVLmfgHIxVshV4rnuz-tpVn2iBWCCGGt6US7wzmdyJKrKl0--oG18OPXVcKuyAe4dHFzJ");
-            $content[]=array("Title"=>"这是一个标题5","Description"=>"55","PicUrl"=>"http://139.129.128.130/a/image/2.jpg","Url"=>"http://baike.baidu.com/link?url=Es4-sw78N2IJT105s4LEmy7B8HYWUbtm4eTFEe58npAHX1QF89W_oSIaA9bYVLmfgHIxVshV4rnuz-tpVn2iBWCCGGt6US7wzmdyJKrKl0--oG18OPXVcKuyAe4dHFzJ");
+            $content[]=array("Title"=>"这是一个标题1","Description"=>"11","PicUrl"=>"http://139.129.128.130/a/image/1.jpg","Url"=>"http://baike.baidu.com/view/13123608.htm");
+            $content[]=array("Title"=>"这是一个标题2","Description"=>"22","PicUrl"=>"http://139.129.128.130/a/image/2.jpg","Url"=>"http://baike.baidu.com/view/13123608.htm");
+            $content[]=array("Title"=>"这是一个标题3","Description"=>"33","PicUrl"=>"http://139.129.128.130/a/image/2.jpg","Url"=>"http://baike.baidu.com/view/13123608.htm");
+            $content[]=array("Title"=>"这是一个标题4","Description"=>"44","PicUrl"=>"http://139.129.128.130/a/image/2.jpg","Url"=>"http://baike.baidu.com/view/13123608.htm");
+            $content[]=array("Title"=>"这是一个标题5","Description"=>"55","PicUrl"=>"http://139.129.128.130/a/image/2.jpg","Url"=>"http://baike.baidu.com/view/13123608.htm");
             
             //$this->logger("\r\n".var_dump($content));
             // $result = $this->transmitNews($object,$content);
@@ -327,16 +328,122 @@ class wechatTest
                 $result = $this->transmitMusic($object,$content);   
             }            
         }else{
+            //$keyword: 你输入的文本
+            //$object->FromUserName 获取用户的openId，
+
+            $this->logger("\r\n"."开始调用");
+
+            // 调用一个方法，将openId和你输入的文本，使用这个函数处理   
+
+            $this->getUserInfo($object->FromUserName,$keyword);
+
+            $this->logger("\r\n"."调用结束");
+
+            // 给你回复的内容
             $result = $this->transmitText($object,$content);
         }
       
         return $result;
         $this->logger("\r\n"."函数返回的值：\n".$result);
+    } 
+
+    function getUserInfo($openid, $text)
+    {
+        
+        $access_token=$this->get_token();
+
+        $this->logger("\r\n"."你的token：\n".$access_token);
+
+        // 用http的get请求
+        $url="https://api.weixin.qq.com/cgi-bin/user/info?access_token={$access_token}&openid={$openid}&lang=zh_CN";
+
+        $this->logger("\r\n"."获取用户信息的URL：\n".$url);
+        
+        // 请求获取用户信息的接口，返回这个openid对应的用于信息，json格式
+        // $jsoninfo = $this->httpRequest($url);//用作者自己写的额函数
+        $jsoninfo = $this->https_request($url);       
+
+         $this->logger("\r\n"."httpRequest处理后的用户信息：\n".$jsoninfo);
+
+        // 将json装成php的数组，就可以使用数组操作用户信息
+        $user = json_decode($jsoninfo,true);
+
+//用户一会话就讲用户信息放入user表
+        $this->insertuser($user);
+//用户一会话就讲用户会话放入message
+        $this->insertmessage($openid,$text,0,"text");
+
+    }
+
+    
+    //将会话消息插入数据库
+    //第一个参数：$openid 用户编号
+    // 第二个参数：$text,你说的和公众号数据标记，1为公众号，2为用户
+    function insertmessage($openid, $text, $who="0", $mtype="text")    
+    {
+        include "dbinfo/conn.inc.php";
+        $sql = "insert into message(openid,mess,who,utime,mtype) 
+            values('{$openid}','{$text}','{$who}','".time()."','{$mtype}')";
+        mysql_query($sql);
+
+        //更新用户信息时间表，最新回复的在最上面
+        $sqlUpdate = "update user set utime='".time()."' where openid= {$openid}";
+        mysql_query($sqlUpdate);
+
+    }
+
+
+
+    // 将用户的消息写入数据库
+    function insertuser($user){
+        include "dbinfo/conn.inc.php";
+        $sql = "insert into user(openid,nickname,sex,city,province,headimgurl,utime) 
+                values('{$user["openid"]}','{$user["nickname"]}','{$user["sex"]}','{$user["city"]}','{$user["province"]}','{$user["headimgurl"]}','".time()."')";
+        mysql_query($sql);
+    }
+
+    // 获取token
+    function get_token()
+    {
+        $appid="wx320b480f654dfc25";
+        $secret="5c5472e5778ef5d411e664d921ca6dd3";
+
+        $url="https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid={$appid}&secret={$secret}";
+
+        $this->logger("\r\n得到token的URL：".$url);
+        
+        $json = $this->https_request($url);
+        $arr = json_decode($json, true);
+        // print_r($arr);
+        // echo "<br/><br/>";
+        $this->logger("\r\n得到的token：".$arr['access_token']);
+
+        return $arr['access_token'];
+    }   
+
+    // 通过https中的get或post
+    function https_request($url, $data=null)
+    {
+        $curl = curl_init();
+
+        curl_setopt($curl, CURLOPT_URL,$url);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER,false);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST,false);
+
+        
+        if(!empty($data)){
+            curl_setopt($curl, CURLOPT_POST,1);
+            curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+        }
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER,1);
+
+        $output = curl_exec($curl);
+        return $output;
     }
     
 
 
-    //回复音乐消息————————————此处不能传值
+    //回复音乐消息
     function transmitMusic($object,$musicArr)
     {
         $this->logger("\r\n"."我在前面aaa"); 
