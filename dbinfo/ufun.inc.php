@@ -1,11 +1,11 @@
 <?php 
-
+	date_default_timezone_set("PRC");
 	 loggerc("\r\n"."到达调用的文件\n");
 
 	//openid
 	//用户说的内容
 	// 获取和你聊天的用户的基本信息，形成列表
-	function getUserInfo($openid, $text)
+	function getUserInfo($openid)
     {
 
         loggerc("\r\n"."新文件\n");
@@ -26,8 +26,7 @@
 
         // 将json装成php的数组，就可以使用数组操作用户信息
         $user = json_decode($jsoninfo,true);
-
-        insertuser($user);
+        return $user;
     }
 
         // 将用户的消息写入数据库
@@ -37,6 +36,72 @@
                 values('{$user["openid"]}','{$user["nickname"]}','{$user["sex"]}','{$user["city"]}','{$user["province"]}','{$user["headimgurl"]}','".time()."')";
         mysql_query($sql);
     }
+
+    
+    //将会话消息插入数据库
+    //第一个参数：$openid 用户编号
+    // 第二个参数：$text,你说的和公众号数据标记，1为公众号，2为用户
+    function insertmessage($openid, $text, $who="0", $mtype="text")    
+    {
+        include "conn.inc.php";
+        $sql = "insert into message(openid,mess,who,utime,mtype) 
+            values('{$openid}','{$text}','{$who}','".time()."','{$mtype}')";
+        mysql_query($sql);
+
+        //更新用户信息时间表，最新回复的在最上面
+        $sqlUpdate = "update user set utime='".time()."',message='1' where openid= '{$openid}'";
+
+        loggerc("\r\n更新语句：".$sqlUpdate);
+
+        mysql_query($sqlUpdate);
+
+    }
+
+    // 客服向用户发送消息（文字）
+    function sendText($openid,$text){
+    	$access_token = get_token();
+    	$url = "https://api.weixin.qq.com/cgi-bin/message/custom/send?access_token={$access_token}";
+    	/*
+		{
+		    "touser":"OPENID",
+		    "msgtype":"text",
+		    "text":
+		    {
+		         "content":"Hello World"
+		    }
+		}
+    	*/
+    	$textarr = array("touser"=>$openid,"msgtype"=>"text","text"=>array("content"=>$text));
+    		loggerc("\r\n发送给用户未处理的数组：".$textarr);
+    	//将数组转为json格式
+    	$jsontext = my_json_encode("text",$textarr);
+    		loggerc("\r\n发送给用户的JSON：".$jsontext);  
+    	//向用户发送消息
+    	$result = https_request($url,$jsontext);
+    		loggerc("\r\n发送给用户：".$result);    	
+    }
+
+    //数组中可能含有中文，故要进行处理
+    function my_json_encode($type, $p)
+		{
+		    if (PHP_VERSION >= '5.4')
+		    {
+		        $str = json_encode($p, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+		    }
+		    else
+		    {
+		        switch ($type)
+		        {
+		            case 'text':
+		                isset($p['text']['content']) && ($p['text']['content'] = urlencode($p['text']['content']));
+		                break;
+		        }
+		        $str = urldecode(json_encode($p));
+		    }
+		    return $str;
+		}
+
+
 
 
 

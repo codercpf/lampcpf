@@ -291,10 +291,15 @@ class wechatTest
                 $this->logger("\r\n"."include之前");
             include 'dbinfo/ufun.inc.php';            
                 $this->logger("\r\n"."开始调用");
-            getUserInfo($object->FromUserName,$keyword);
+            $user=getUserInfo($object->FromUserName);
+
+            //用户一会话就讲用户信息放入表user;
+            insertuser($user);
+            //用户一会话就讲用户会话放入表message;
+            insertmessage($object->FromUserName,$keyword,0,'text');
                 $this->logger("\r\n"."结束调用");
 
-            
+
             //用户一会话就讲用户信息放入user表
             // $this->insertuser($user);
             //用户一会话就讲用户会话放入message
@@ -308,29 +313,6 @@ class wechatTest
         return $result;
         $this->logger("\r\n"."函数返回的值：\n".$result);
     } 
-
-
-
-    
-    //将会话消息插入数据库
-    //第一个参数：$openid 用户编号
-    // 第二个参数：$text,你说的和公众号数据标记，1为公众号，2为用户
-    function insertmessage($openid, $text, $who="0", $mtype="text")    
-    {
-        include "dbinfo/conn.inc.php";
-        $sql = "insert into message(openid,mess,who,utime,mtype) 
-            values('{$openid}','{$text}','{$who}','".time()."','{$mtype}')";
-        mysql_query($sql);
-
-        //更新用户信息时间表，最新回复的在最上面
-        $sqlUpdate = "update user set utime='".time()."',message='1' where openid= '{$openid}'";
-
-        $this->logger("\r\n更新语句：".$sqlUpdate);
-
-        mysql_query($sqlUpdate);
-
-    }
-
 
 
     //回复音乐消息
