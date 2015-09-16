@@ -1,7 +1,7 @@
 <?php
 
 // require 'fci.php';
-// include 'dbinfo/ufun.inc.php';
+
 
 date_default_timezone_set('PRC');
 
@@ -129,9 +129,6 @@ class wechatTest
     }
     function getcity($carr)
     {
-        // $this->logger("\r\n在这里调用");
-        // $this->logger("\r\n接收的语音： ".$text);
-
         include 'dbinfo/conn.inc.php';
         mysql_query("set names utf8");
 
@@ -153,9 +150,7 @@ class wechatTest
     }    
     // 根据citycode获取天气接口的数据
     function getWeatherInfo($cityCode)
-    {          
- 
-     
+    {
         //获取实时天气
         $url = "http://www.weather.com.cn/data/sk/".$cityCode.".html";
         $this->logger("\r\n天气预报地址： ".$url);
@@ -180,43 +175,8 @@ class wechatTest
             $result = "实况 温度：".$info['temp']."℃ 湿度：".$info['SD']." 风速：".$info['WD'].$info['WSE']."级";
             $weatherArray[] = array("Title"=>str_replace("%", "﹪", $result), "Description"=>"", "PicUrl"=>"", "Url" =>"");
         }
-
-/*
-        //获取六日天气
-        // $url = "http://m.weather.com.cn/mweather/".$cityCode.".shtml";
-        $url = "http://m.weather.com.cn/data/".$cityCode.".html";
-            $this->logger("\r\n六日天气预报地址： ".$url);
-        $output = $this->httpRequest($url);
-            $this->logger("\r\n六日得到的output02:".$output);
-        $weather = json_decode($output, true); 
-            $this->logger("\r\n六日得到的数组： ".count($weather));
-        $info = $weather['weatherinfo'];
-            $this->logger("\r\n六日天气预报内容： ".count($info));
-
-        //标题
-        $weatherArray[] = array("Title"=>$info['city']."近三天的天气预报", "Description"=>"", "PicUrl"=>"", "Url" =>"");
-        
-
-        // 如果穿衣建议存在，就给用户
-        if (!empty($info['index_d'])){
-            $weatherArray[] = array("Title" =>$info['index_d'], "Description" =>"", "PicUrl" =>"", "Url" =>"");
-        }
-
-        $weekArray = array("日","一","二","三","四","五","六");
-        $maxlength = 3;
-        for ($i = 1; $i <= $maxlength; $i++) {
-            $offset = strtotime("+".($i-1)." day");
-            $subTitle = date("m月d日",$offset)." 周".$weekArray[date('w',$offset)]." ".$info['temp'.$i]." ".$info['weather'.$i]." ".$info['wind'.$i];
-            $weatherArray[] = array("Title" =>$subTitle, "Description" =>"", "PicUrl" =>"http://discuz.comli.com/weixin/weather/"."d".sprintf("%02u",$info['img'.(($i *2)-1)]).".jpg", "Url" =>"");
-        }
-
-*/
-
         return $weatherArray;
     }
-
-
-
 
 
     function receiveVoice($object)
@@ -308,12 +268,8 @@ class wechatTest
 
             $content   = array();
             $content[] = array("Title" =>"小苹果","Description"=>"很好听","MusicUrl"=>"http://139.129.128.130/a/music/1.mp3","HQMusicUrl"=>"http://139.129.128.130/a/music/1.mp3" );
-            $this->logger("\r\n我是音乐：".$content);               
-            
-            // $result = $this->transmitMusic($object,$content);
-
-            // $this->logger("\r\n"."音乐处理后的result："."\n".$result);
-            
+            $this->logger("\r\n我是音乐：".$content);              
+           
         }else{
             $content="常鹏飞 ".date("Y-m-d H:i:s")." 技术支持";
             // $result = $this->transmitText($object,$content);
@@ -331,13 +287,19 @@ class wechatTest
             //$keyword: 你输入的文本
             //$object->FromUserName 获取用户的openId，
 
-            $this->logger("\r\n"."开始调用");
+            // 调用一个方法，将openId和你输入的文本，使用这个函数处理 
+                $this->logger("\r\n"."include之前");
+            include 'dbinfo/ufun.inc.php';            
+                $this->logger("\r\n"."开始调用");
+            getUserInfo($object->FromUserName,$keyword);
+                $this->logger("\r\n"."结束调用");
 
-            // 调用一个方法，将openId和你输入的文本，使用这个函数处理   
+            
+            //用户一会话就讲用户信息放入user表
+            // $this->insertuser($user);
+            //用户一会话就讲用户会话放入message
+            // $this->insertmessage($openid,$keyword,0,"text");
 
-            $this->getUserInfo($object->FromUserName,$keyword);
-
-            $this->logger("\r\n"."调用结束");
 
             // 给你回复的内容
             $result = $this->transmitText($object,$content);
@@ -347,33 +309,7 @@ class wechatTest
         $this->logger("\r\n"."函数返回的值：\n".$result);
     } 
 
-    function getUserInfo($openid, $text)
-    {
-        
-        $access_token=$this->get_token();
 
-        $this->logger("\r\n"."你的token：\n".$access_token);
-
-        // 用http的get请求
-        $url="https://api.weixin.qq.com/cgi-bin/user/info?access_token={$access_token}&openid={$openid}&lang=zh_CN";
-
-        $this->logger("\r\n"."获取用户信息的URL：\n".$url);
-        
-        // 请求获取用户信息的接口，返回这个openid对应的用于信息，json格式
-        // $jsoninfo = $this->httpRequest($url);//用作者自己写的额函数
-        $jsoninfo = $this->https_request($url);       
-
-         $this->logger("\r\n"."httpRequest处理后的用户信息：\n".$jsoninfo);
-
-        // 将json装成php的数组，就可以使用数组操作用户信息
-        $user = json_decode($jsoninfo,true);
-
-//用户一会话就讲用户信息放入user表
-        $this->insertuser($user);
-//用户一会话就讲用户会话放入message
-        $this->insertmessage($openid,$text,0,"text");
-
-    }
 
     
     //将会话消息插入数据库
@@ -387,60 +323,14 @@ class wechatTest
         mysql_query($sql);
 
         //更新用户信息时间表，最新回复的在最上面
-        $sqlUpdate = "update user set utime='".time()."' where openid= {$openid}";
+        $sqlUpdate = "update user set utime='".time()."',message='1' where openid= '{$openid}'";
+
+        $this->logger("\r\n更新语句：".$sqlUpdate);
+
         mysql_query($sqlUpdate);
 
     }
 
-
-
-    // 将用户的消息写入数据库
-    function insertuser($user){
-        include "dbinfo/conn.inc.php";
-        $sql = "insert into user(openid,nickname,sex,city,province,headimgurl,utime) 
-                values('{$user["openid"]}','{$user["nickname"]}','{$user["sex"]}','{$user["city"]}','{$user["province"]}','{$user["headimgurl"]}','".time()."')";
-        mysql_query($sql);
-    }
-
-    // 获取token
-    function get_token()
-    {
-        $appid="wx320b480f654dfc25";
-        $secret="5c5472e5778ef5d411e664d921ca6dd3";
-
-        $url="https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid={$appid}&secret={$secret}";
-
-        $this->logger("\r\n得到token的URL：".$url);
-        
-        $json = $this->https_request($url);
-        $arr = json_decode($json, true);
-        // print_r($arr);
-        // echo "<br/><br/>";
-        $this->logger("\r\n得到的token：".$arr['access_token']);
-
-        return $arr['access_token'];
-    }   
-
-    // 通过https中的get或post
-    function https_request($url, $data=null)
-    {
-        $curl = curl_init();
-
-        curl_setopt($curl, CURLOPT_URL,$url);
-        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER,false);
-        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST,false);
-
-        
-        if(!empty($data)){
-            curl_setopt($curl, CURLOPT_POST,1);
-            curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
-        }
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER,1);
-
-        $output = curl_exec($curl);
-        return $output;
-    }
-    
 
 
     //回复音乐消息
